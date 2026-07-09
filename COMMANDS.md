@@ -85,8 +85,8 @@ cmake --build build
 - **Function:** Inspects the raw, internal data of any object in the database.
 - **Under the hood:** Decompresses the file located at `.minigit/objects/<hash[0:2]>/<hash[2:]>`. If the `-p` (pretty-print) flag is provided and the object is a chunk manifest, it will automatically fetch and assemble all the underlying chunks, printing the file exactly as it was originally added.
 
-### 9. `visualize.py`
-**Usage:** `python3 visualize.py`
+### 9. `scripts/visualize.py`
+**Usage:** `python3 scripts/visualize.py`
 - **Function:** An included Python utility script that visually charts the internal database graph.
 - **Under the hood:** It scans the `.minigit/objects/` folder, decompresses all blobs, trees, commits, and chunks, resolves their dependencies, and outputs a `visualize.html` file using Mermaid.js. Opening this HTML file in your browser reveals a color-coded diagram of your DAG!
 
@@ -133,6 +133,6 @@ echo "MiniGit is awesome!" >> myfile.txt
 ../build/minigit gc
 
 # 12. Generate a visual chart of the repository
-python3 ../visualize.py
+python3 ../scripts/visualize.py
 # (Then open the generated visualize.html in your web browser!)
 ```

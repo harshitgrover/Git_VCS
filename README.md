@@ -29,7 +29,13 @@ Because CDC generates many granular chunk objects, staging files rapidly can lea
 Built with a modular Command Pattern, MiniGit supports the standard workflows you expect from a VCS: staging files to an `Index`, wrapping them into `Tree` snapshots, tracking history with `Commit` objects, and standard observation commands (`log`, `status`, `cat-file`).
 
 ### 6. DAG Visualizer
-Included is a `visualize.py` script that reads the binary `.minigit/objects/` database, decompresses it, parses the relationships, and generates an interactive, graphical HTML flowchart (using Mermaid.js) of your entire repository architecture in real-time.
+Included is a `scripts/visualize.py` script that reads the binary `.minigit/objects/` database, decompresses it, parses the relationships, and generates an interactive, graphical HTML flowchart (using Mermaid.js) of your entire repository architecture in real-time.
+
+---
+
+## 📖 Complete CLI Documentation
+
+For a full breakdown of every command available, how to use them, and exactly how they function under the hood, please refer to the **[Command Reference Guide (COMMANDS.md)](COMMANDS.md)**.
 
 ## 🛠️ Build Instructions
 
