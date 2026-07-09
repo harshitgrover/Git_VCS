@@ -1,0 +1,19 @@
+# CMake build directory
+build/
+
+# Compilation database
+compile_commands.json
+
+# macOS
+.DS_Store
+
+# MiniGit custom directories and generated files
+.minigit/
+test_repo_cpp/
+visualize.html
+log.out
+status.out
+
+# IDEs
+.vscode/
+.idea/
