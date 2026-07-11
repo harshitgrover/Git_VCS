@@ -29,6 +29,12 @@ cmake --build build
 ```
 - **Function:** Executes the GoogleTest suite to verify that Hashing, Diffing, CDC, and Garbage Collection are working perfectly.
 
+### 4. Run the Performance Benchmarks
+```bash
+./build/minigit_benchmark
+```
+- **Function:** Runs stress tests on the BLAKE3 hasher, Myers Diff, and CDC engines. It automatically generates and saves statistical data (like deduplication percentages and MB/s throughput) into a `benchmark_results.txt` file in your root folder.
+
 ---
 
 ## Core Version Control Commands

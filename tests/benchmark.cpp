@@ -129,11 +129,24 @@ void benchmark_myers_diff() {
     cout << "========================================\n";
 }
 
+#include <fstream>
+
 int main() {
+    // Redirect std::cout to a file (overwrites it every time it runs)
+    ofstream out("benchmark_results.txt");
+    streambuf *coutbuf = cout.rdbuf(); // save old buffer
+    cout.rdbuf(out.rdbuf()); // redirect std::cout to out.txt!
+
     cout << "\nStarting MiniGit Benchmark Suite...\n\n";
     benchmark_blake3();
     benchmark_cdc_deduplication();
     benchmark_myers_diff();
     cout << "Benchmarking Complete.\n\n";
+    
+    // Restore original cout
+    cout.rdbuf(coutbuf);
+    
+    // Print a tiny message to the terminal so the user knows it finished
+    std::cout << "Benchmark successfully completed! Results saved to benchmark_results.txt\n";
     return 0;
 }
