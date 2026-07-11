@@ -69,8 +69,18 @@ add_executable(minigit
 target_link_libraries(minigit PRIVATE minigit_core)
 
 enable_testing()
-add_executable(minigit_tests tests/test_basic.cpp)
+add_executable(minigit_tests
+    tests/test_basic.cpp
+)
+target_include_directories(minigit_tests PRIVATE src)
 target_link_libraries(minigit_tests PRIVATE minigit_core GTest::gtest_main)
+
+# Benchmark Suite
+add_executable(minigit_benchmark
+    tests/benchmark.cpp
+)
+target_include_directories(minigit_benchmark PRIVATE src)
+target_link_libraries(minigit_benchmark PRIVATE minigit_core ZLIB::ZLIB blake3)
 
 include(GoogleTest)
 gtest_discover_tests(minigit_tests)
