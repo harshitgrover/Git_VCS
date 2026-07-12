@@ -18,3 +18,7 @@ status.out
 # IDEs
 .vscode/
 .idea/
+
+# Caches
+.cache/
+cache/
