@@ -91,6 +91,37 @@ string Commit::serialize() const {
 
 ---
 
+### `Index.cpp` (The Staging Area)
+The Index is the critical middle-layer between your local Working Directory and the permanent Object Database. It is stored as a flat-file at `.minigit/index`.
+```cpp
+void Index::write() const {
+    ofstream out(index_path_);
+    for (const auto& [path, hash] : entries_) {
+        out << hash << " " << path << "\n";
+    }
+}
+```
+* **System Design Role:** When you run `minigit add myfile.txt`, MiniGit chunks the file and creates a `Blob` manifest. The 64-character hash of that manifest is temporarily written to the `Index`. 
+* **O(1) Status Checks:** Because the Index maps exact file paths to their currently staged Hashes, commands like `minigit status` or the safety checks in `minigit switch` can operate in $\mathcal{O}(1)$ time. They don't have to parse massive Trees; they just read this flat text file to instantly know what is queued for the next commit.
+
+---
+
+### 3. Decompression & File Reconstruction (`src/core/Utils.cpp`)
+
+While Chunking a file is mathematically complex, *reconstructing* a file is equally critical for commands like `checkout`, `restore`, and `diff`.
+
+#### The `reconstruct_from_manifest` Algorithm
+When you want to pull a file out of the database (e.g., `minigit restore myfile.txt`), MiniGit must perform the exact reverse of the CDC process:
+1. It locates the `Blob` manifest hash for `myfile.txt` in the Commit's `Tree`.
+2. It decompresses the Blob file. Inside, it finds a newline-separated list of Chunk Hashes (e.g., `chunk a1b2... \n chunk c3d4...`).
+3. It iterates through every single Chunk Hash in the list.
+4. For each Hash, it accesses the physical `.minigit/objects/` folder, decompresses the binary Chunk back into raw text, and linearly appends it to an output string.
+5. The final string is a flawless, byte-for-byte recreation of the original file, which is then written over your Working Directory.
+
+* **Trade-off:** This makes "Read" operations computationally heavier than standard Git (which just opens 1 large file). However, because we only ever reconstruct the specific files requested by the user, the microsecond latency of ZLIB decompression on 4KB chunks is completely invisible to human perception.
+
+---
+
 ### 4. Branching, Switching, and Restoring
 Git uses branching to allow non-linear development. Branching itself is very simple: a branch is simply a text file in `.minigit/refs/heads/` that contains the 40-character hash of a commit.
 When you run `minigit branch feature`, MiniGit just creates a file named `feature` and copies the hash from `HEAD` into it.
