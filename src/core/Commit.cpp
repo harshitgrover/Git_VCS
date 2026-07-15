@@ -1,12 +1,12 @@
-#include "Commit.h"
+#include "Commit.hpp"
 #include <ctime>
 
 using namespace std;
 
 namespace minigit {
 
-Commit::Commit(const string& tree_hash, const string& parent_hash, const string& message)
-    : tree_hash_(tree_hash), parent_hash_(parent_hash), message_(message) {}
+Commit::Commit(const string& tree_hash, const vector<string>& parents, const string& message)
+    : tree_hash_(tree_hash), parents_(parents), message_(message) {}
 
 string Commit::type() const {
     return "commit";
@@ -14,8 +14,10 @@ string Commit::type() const {
 
 string Commit::serialize() const {
     string content = "tree " + tree_hash_ + "\n";
-    if (!parent_hash_.empty()) {
-        content += "parent " + parent_hash_ + "\n";
+    for (const auto& p : parents_) {
+        if (!p.empty()) {
+            content += "parent " + p + "\n";
+        }
     }
     
     time_t now = time(nullptr);

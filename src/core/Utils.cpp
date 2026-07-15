@@ -1,4 +1,4 @@
-#include "Utils.h"
+#include "Utils.hpp"
 #include <fstream>
 #include <filesystem>
 #include <sstream>
@@ -61,6 +61,52 @@ string reconstruct_from_manifest(const string& gitdir, const string& manifest_da
         return content;
     }
     return manifest_data;
+}
+
+map<string, string> parse_tree(const string& gitdir, const string& tree_hash) {
+    map<string, string> entries;
+    string raw = read_object_content(gitdir, tree_hash);
+    size_t null_idx = raw.find('\0');
+    if (null_idx == string::npos) return entries;
+    
+    string body = raw.substr(null_idx + 1);
+    size_t pos = 0;
+    while (pos < body.size()) {
+        size_t space = body.find(' ', pos);
+        if (space == string::npos) break;
+        size_t null = body.find('\0', space);
+        if (null == string::npos) break;
+        
+        string name = body.substr(space + 1, null - space - 1);
+        if (null + 1 + 64 <= body.size()) { // BLAKE3 is 64 hex chars
+            string hash = body.substr(null + 1, 64);
+            entries[name] = hash;
+            pos = null + 1 + 64;
+        } else {
+            break; // corrupted
+        }
+    }
+    return entries;
+}
+
+ParsedCommit parse_commit(const string& gitdir, const string& commit_hash) {
+    ParsedCommit parsed;
+    string raw = read_object_content(gitdir, commit_hash);
+    size_t null_idx = raw.find('\0');
+    if (null_idx == string::npos) return parsed;
+    
+    string body = raw.substr(null_idx + 1);
+    istringstream iss(body);
+    string line;
+    while (getline(iss, line)) {
+        if (line.empty()) break; // End of headers
+        if (line.substr(0, 5) == "tree ") {
+            parsed.tree_hash = line.substr(5);
+        } else if (line.substr(0, 7) == "parent ") {
+            parsed.parents.push_back(line.substr(7));
+        }
+    }
+    return parsed;
 }
 
 } // namespace utils

@@ -91,7 +91,40 @@ string Commit::serialize() const {
 
 ---
 
-## 🔪 3. Content-Defined Chunking (CDC) (`src/core/Chunker.cpp`)
+### 4. Branching, Switching, and Restoring
+Git uses branching to allow non-linear development. Branching itself is very simple: a branch is simply a text file in `.minigit/refs/heads/` that contains the 40-character hash of a commit.
+When you run `minigit branch feature`, MiniGit just creates a file named `feature` and copies the hash from `HEAD` into it.
+
+#### 4.1 The `checkout` vs `switch` vs `restore` Problem
+In early versions of Git, the `checkout` command was massively overloaded. It did two completely distinct things:
+1. **Change branches**: `git checkout main` (Moves your HEAD pointer).
+2. **Discard local file changes**: `git checkout -- file.cpp` (Overwrites your local file with a past version).
+
+This overloading confused beginners, who often accidentally wiped out their unsaved work when they just meant to change branches. In modern Git (and implemented cleanly in MiniGit), this responsibility is split:
+*   **`switch`**: A strict, dedicated command that *only* changes branches. It features built-in safety checks that examine your `Index`. If it detects uncommitted changes that differ from `HEAD`, it blocks the switch to protect your code.
+*   **`restore`**: A dedicated command that *only* pulls files from the past to overwrite your local working directory. It can recursively restore an entire directory (`minigit restore src/`), restore everything (`minigit restore .`), or even time-travel by parsing a historical commit hash (`minigit restore <hash> .`).
+*   **Hybrid `checkout`**: MiniGit retains the classic `checkout` command as a smart hybrid router. It dynamically evaluates the target argument. If the target is a branch, it safely routes the request to the `switch` engine. If the target is a file or directory, it routes to the `restore` engine.
+
+The real algorithmic complexity arises during **Merging** (`src/core/Repository.cpp`). When you run `minigit merge feature`, MiniGit must fuse two divergent histories. 
+
+#### Phase 1: Lowest Common Ancestor (BFS Traversal)
+**Time Complexity: $\mathcal{O}(V + E)$ where V is commits and E is parent pointers.**
+Because commits can have multiple parents (merge commits), the history forms a **Directed Acyclic Graph (DAG)**. We cannot simply walk backward in a straight line. 
+To find where the branches originally split, MiniGit performs a simultaneous **Breadth-First Search (BFS)** from both the `HEAD` commit and the `feature` commit.
+1. We maintain two queues (`queue_A`, `queue_B`) and two visited sets (`vis_A`, `vis_B`).
+2. We alternate popping from each queue, adding the commit to its respective visited set, and pushing its parent(s) to the queue.
+3. The absolute first commit that appears in **both** visited sets is guaranteed to be the **Lowest Common Ancestor (LCA)**.
+
+#### Phase 2: 3-Way Merge Evaluation
+Once the LCA is found, MiniGit extracts the `Tree` from the LCA (Original), the `Tree` from `HEAD` (A), and the `Tree` from `feature` (B). It iterates through every file and applies boolean logic:
+*   **Safe (A Modified):** If `Original == B` but `Original != A`, we keep A's changes.
+*   **Safe (B Modified):** If `Original == A` but `Original != B`, we apply B's changes.
+*   **Merge Conflict 🚨:** If `Original != A` AND `Original != B` AND `A != B`, both branches modified the exact same file in completely different ways. MiniGit safely aborts the automated merge and injects conflict markers (`<<<<<<< HEAD`, `=======`, `>>>>>>> feature`) directly into your file for manual human resolution.
+
+#### Phase 3: The Merge Commit
+Once all files are successfully combined (or manually resolved by the user), MiniGit creates a special `Commit` object. Unlike standard commits which only have 1 `parent` pointer, a merge commit stores **two parent hashes**. This permanently fuses the two paths of the DAG back together!
+
+### 5. Content-Defined Chunking (CDC) (`src/core/Chunker.cpp`)
 
 This is the most critical architectural divergence from standard Git. Standard Git saves a full-file snapshot every time you commit. We engineered a **Streaming Deduplication Engine** instead.
 

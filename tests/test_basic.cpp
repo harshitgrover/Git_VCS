@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include <filesystem>
 #include <fstream>
-#include "core/Repository.h"
-#include "core/Blob.h"
-#include "core/Diff.h"
-#include "core/Chunker.h"
-#include "core/Index.h"
+#include "core/Repository.hpp"
+#include "core/Blob.hpp"
+#include "core/Diff.hpp"
+#include "core/Chunker.hpp"
+#include "core/Index.hpp"
 
 using namespace std;
 namespace fs = std::filesystem;

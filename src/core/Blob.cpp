@@ -1,6 +1,6 @@
-#include "Blob.h"
-#include "Chunker.h"
-#include "Repository.h"
+#include "Blob.hpp"
+#include "Chunker.hpp"
+#include "Repository.hpp"
 #include <blake3.h>
 #include <zlib.h>
 #include <filesystem>

@@ -1,8 +1,8 @@
-#include "DiffCommand.h"
-#include "../core/Repository.h"
-#include "../core/Index.h"
-#include "../core/Utils.h"
-#include "../core/Diff.h"
+#include "DiffCommand.hpp"
+#include "../core/Repository.hpp"
+#include "../core/Index.hpp"
+#include "../core/Utils.hpp"
+#include "../core/Diff.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>

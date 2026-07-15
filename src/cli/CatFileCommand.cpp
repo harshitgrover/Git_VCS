@@ -1,6 +1,6 @@
-#include "CatFileCommand.h"
-#include "../core/Repository.h"
-#include "../core/Utils.h"
+#include "CatFileCommand.hpp"
+#include "../core/Repository.hpp"
+#include "../core/Utils.hpp"
 #include <iostream>
 
 using namespace std;

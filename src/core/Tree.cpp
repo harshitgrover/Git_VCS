@@ -1,4 +1,4 @@
-#include "Tree.h"
+#include "Tree.hpp"
 #include <sstream>
 
 using namespace std;

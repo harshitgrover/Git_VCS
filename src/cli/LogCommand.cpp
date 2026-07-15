@@ -1,6 +1,6 @@
-#include "LogCommand.h"
-#include "../core/Repository.h"
-#include "../core/Utils.h"
+#include "LogCommand.hpp"
+#include "../core/Repository.hpp"
+#include "../core/Utils.hpp"
 #include <iostream>
 #include <fstream>
 #include <filesystem>

@@ -65,6 +65,11 @@ add_executable(minigit
     src/cli/CatFileCommand.cpp
     src/cli/LogCommand.cpp
     src/cli/StatusCommand.cpp
+    src/cli/BranchCommand.cpp
+    src/cli/CheckoutCommand.cpp
+    src/cli/MergeCommand.cpp
+    src/cli/RestoreCommand.cpp
+    src/cli/SwitchCommand.cpp
 )
 target_link_libraries(minigit PRIVATE minigit_core)
 

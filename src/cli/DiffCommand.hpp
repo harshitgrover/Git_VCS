@@ -1,11 +1,11 @@
 #pragma once
-#include "Command.h"
+#include "Command.hpp"
 
 using namespace std;
 
 namespace minigit {
 
-class CommitCommand : public Command {
+class DiffCommand : public Command {
 public:
     void execute(const vector<string>& args) override;
 };

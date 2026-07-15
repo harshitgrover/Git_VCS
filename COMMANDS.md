@@ -63,6 +63,39 @@ cmake --build build
 - **Function:** Shows the line-by-line differences between your working directory file and the version currently staged in the index.
 - **Under the hood:** Fetches the blob manifest from the index, reconstructs the file by pulling and decompressing all CDC chunks, reads your current working file, and runs the **Myers Diff Algorithm** to calculate the shortest sequence of additions (`+`) and deletions (`-`).
 
+### 5. `branch`
+**Usage:** `minigit branch <branch_name>`
+- **Function:** Creates a new branch pointer at the current commit.
+- **Under the hood:** Creates a new text file at `.minigit/refs/heads/<branch_name>` and writes the current commit hash (from `HEAD`) into it.
+
+### 6. `switch`
+**Usage:** `minigit switch <branch_name>`
+- **Function:** A dedicated command to switch your active branch and update your working directory.
+- **Safety Feature:** MiniGit automatically checks your staging `Index`. If you have uncommitted changes that differ from the `HEAD` commit, it will safely abort the switch to prevent you from losing your work!
+- **Under the hood:** Updates the `.minigit/HEAD` file to point to the new branch ref. Then, it parses the target branch's tree to reconstruct and overwrite the files in your working directory.
+
+### 7. `restore`
+**Usage 1 (Instant Undo):** `minigit restore <filepath_or_directory>`
+**Usage 2 (Time Travel):** `minigit restore <commit_hash> <filepath_or_directory>`
+**Usage 3 (Restore All):** `minigit restore .`
+- **Function:** Discards local changes or pulls old versions of files from history.
+- **Under the hood:** By default, it reads your most recent `HEAD` commit. If you pass a `commit_hash`, it parses that historical commit instead. It searches the Tree for an exact file match (e.g., `src/main.cpp`) or a directory prefix (e.g., `src/`). It then decompresses the requested chunks and flawlessly reconstructs the past files directly into your present-day working directory.
+
+### 8. `checkout` (Hybrid Router)
+**Usage:** `minigit checkout <target>`
+- **Function:** A modern, hybrid routing command that mimics standard Git.
+- **Under the hood:** It dynamically evaluates the `<target>`. If `.minigit/refs/heads/<target>` exists, it realizes you are asking to change branches and automatically routes the request to the `switch` logic. If it doesn't exist, it assumes `<target>` is a file or directory and automatically routes the request to the `restore` logic.
+
+### 9. `merge`
+**Usage:** `minigit merge <branch_name>`
+- **Function:** Merges the specified branch into the current branch using a 3-way merge algorithm.
+- **Under the hood:** 
+  1. Uses **Breadth-First Search (BFS)** to traverse the commit DAG and find the Lowest Common Ancestor (LCA).
+  2. Extracts the trees for HEAD, the target branch, and the LCA.
+  3. Evaluates every file to see if it was modified differently across branches.
+  4. Automatically resolves changes, or detects conflicts and injects `<<<<<<<` markers into the file.
+  5. Automatically creates a **Merge Commit** with two parent hashes.
+
 ---
 
 ## System Optimization & Maintenance

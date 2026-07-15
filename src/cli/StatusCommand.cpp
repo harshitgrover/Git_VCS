@@ -1,5 +1,5 @@
-#include "StatusCommand.h"
-#include "../core/Repository.h"
+#include "StatusCommand.hpp"
+#include "../core/Repository.hpp"
 #include <iostream>
 #include <fstream>
 #include <filesystem>

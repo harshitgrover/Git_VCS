@@ -3,8 +3,8 @@
 #include <vector>
 #include <string>
 #include <iomanip>
-#include "core/Chunker.h"
-#include "core/Diff.h"
+#include "core/Chunker.hpp"
+#include "core/Diff.hpp"
 #include <blake3.h>
 
 using namespace std;

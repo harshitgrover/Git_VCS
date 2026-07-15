@@ -1,12 +1,9 @@
 #pragma once
-#include "Command.h"
-#include <string>
-
-using namespace std;
+#include "Command.hpp"
 
 namespace minigit {
 
-class LogCommand : public Command {
+class RestoreCommand : public Command {
 public:
     void execute(const vector<string>& args) override;
 };

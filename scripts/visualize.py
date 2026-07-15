@@ -92,6 +92,38 @@ def generate_html(gitdir):
         else:
             mermaid += f'    {h}["Data Chunk<br>{short_h}"]:::chunk\n'
 
+    # Inject Branches
+    mermaid += "classDef branch fill:#ffb,stroke:#333,stroke-width:2px,rx:10,ry:10;\n"
+    mermaid += "classDef head fill:#fbb,stroke:#333,stroke-width:2px,rx:10,ry:10;\n"
+    
+    refs_dir = os.path.join(gitdir, 'refs', 'heads')
+    if os.path.exists(refs_dir):
+        for b in os.listdir(refs_dir):
+            try:
+                with open(os.path.join(refs_dir, b), 'r') as f:
+                    c_hash = f.read().strip()
+                if c_hash in nodes:
+                    b_id = f"branch_{b}"
+                    mermaid += f'    {b_id}["Branch: {b}"]:::branch\n'
+                    mermaid += f'    {b_id} -.->|points to| {c_hash}\n'
+            except Exception:
+                pass
+                
+    head_file = os.path.join(gitdir, 'HEAD')
+    if os.path.exists(head_file):
+        try:
+            with open(head_file, 'r') as f:
+                ref_line = f.read().strip()
+            if ref_line.startswith('ref: refs/heads/'):
+                b_name = ref_line[16:]
+                mermaid += f'    HEAD["HEAD"]:::head\n'
+                mermaid += f'    HEAD -.->|active| branch_{b_name}\n'
+            else:
+                mermaid += f'    HEAD["HEAD (Detached)"]:::head\n'
+                mermaid += f'    HEAD -.->|points to| {ref_line}\n'
+        except Exception:
+            pass
+
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -116,6 +148,8 @@ def generate_html(gitdir):
         <div style="background: #bbf;">Tree</div>
         <div style="background: #bfb;">Blob Manifest</div>
         <div style="background: #ddd; border-style: dashed;">Data Chunk (CDC)</div>
+        <div style="background: #ffb; border-radius: 10px;">Branch Pointer</div>
+        <div style="background: #fbb; border-radius: 10px;">HEAD</div>
     </div>
 
     <div class="mermaid">

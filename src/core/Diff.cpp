@@ -1,4 +1,4 @@
-#include "Diff.h"
+#include "Diff.hpp"
 #include <algorithm>
 
 using namespace std;

@@ -1,5 +1,5 @@
 #pragma once
-#include "GitObject.h"
+#include "GitObject.hpp"
 #include <string>
 #include <vector>
 

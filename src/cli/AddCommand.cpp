@@ -1,5 +1,5 @@
-#include "AddCommand.h"
-#include "../core/Repository.h"
+#include "AddCommand.hpp"
+#include "../core/Repository.hpp"
 #include <iostream>
 
 using namespace std;

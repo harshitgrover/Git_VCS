@@ -2,14 +2,19 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "cli/InitCommand.h"
-#include "cli/AddCommand.h"
-#include "cli/CommitCommand.h"
-#include "cli/DiffCommand.h"
-#include "cli/GcCommand.h"
-#include "cli/CatFileCommand.h"
-#include "cli/LogCommand.h"
-#include "cli/StatusCommand.h"
+#include "cli/InitCommand.hpp"
+#include "cli/AddCommand.hpp"
+#include "cli/CommitCommand.hpp"
+#include "cli/DiffCommand.hpp"
+#include "cli/GcCommand.hpp"
+#include "cli/CatFileCommand.hpp"
+#include "cli/LogCommand.hpp"
+#include "cli/StatusCommand.hpp"
+#include "cli/BranchCommand.hpp"
+#include "cli/CheckoutCommand.hpp"
+#include "cli/MergeCommand.hpp"
+#include "cli/RestoreCommand.hpp"
+#include "cli/SwitchCommand.hpp"
 
 using namespace std;
 
@@ -44,6 +49,16 @@ int main(int argc, char** argv) {
             command = make_unique<minigit::LogCommand>();
         } else if (command_name == "status") {
             command = make_unique<minigit::StatusCommand>();
+        } else if (command_name == "branch") {
+            command = make_unique<minigit::BranchCommand>();
+        } else if (command_name == "checkout") {
+            command = make_unique<minigit::CheckoutCommand>();
+        } else if (command_name == "merge") {
+            command = make_unique<minigit::MergeCommand>();
+        } else if (command_name == "restore") {
+            command = make_unique<minigit::RestoreCommand>();
+        } else if (command_name == "switch") {
+            command = make_unique<minigit::SwitchCommand>();
         } else {
             cerr << "Unknown command: " << command_name << "\n";
             return 1;

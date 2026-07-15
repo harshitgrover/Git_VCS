@@ -1,4 +1,4 @@
-#include "GitObject.h"
+#include "GitObject.hpp"
 #include <blake3.h>
 #include <zlib.h>
 #include <filesystem>

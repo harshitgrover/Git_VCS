@@ -1,5 +1,5 @@
-#include "CommitCommand.h"
-#include "../core/Repository.h"
+#include "CommitCommand.hpp"
+#include "../core/Repository.hpp"
 #include <iostream>
 
 using namespace std;

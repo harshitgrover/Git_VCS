@@ -1,6 +1,6 @@
-#include "GcCommand.h"
-#include "../core/Repository.h"
-#include "../core/Utils.h"
+#include "GcCommand.hpp"
+#include "../core/Repository.hpp"
+#include "../core/Utils.hpp"
 #include <iostream>
 #include <filesystem>
 #include <sstream>

@@ -4,6 +4,8 @@ MiniGit is a fully functional, highly optimized Version Control System written f
 
 ### 🧠 Core Algorithms & Architecture Used
 - **Directed Acyclic Graph (DAG) & Merkle Trees** (Immutable Object Database)
+- **Breadth-First Search (BFS)** (Lowest Common Ancestor for Merging)
+- **3-Way Merge Algorithm** (Conflict Resolution)
 - **Rabin-Karp Rolling Hash** (Content-Defined Chunking)
 - **Myers Shortest Edit Script Algorithm** (Dynamic Programming Diff Engine)
 - **Mark-and-Sweep Graph Traversal** (Garbage Collection)
@@ -37,18 +39,25 @@ MiniGit leverages an immutable object database (a Directed Acyclic Graph) stored
 - **BLAKE3 Hashing**: Uses the state-of-the-art cryptographic hash function BLAKE3 (much faster than Git's standard SHA-1) to uniquely identify all objects.
 - **ZLIB Compression**: Every object is tightly compressed using zlib before being written to disk to save space.
 
-### 2. Content-Defined Chunking (CDC)
+### 4. Content-Defined Chunking (CDC)
 Unlike standard Git (which stores whole files), MiniGit slices files into smaller chunks using a **Rabin-Karp Rolling Hash**.
 - As the window slides across the file's bytes, it deterministically cuts chunks (average size 4KB).
 - If you insert a single byte at the beginning of a massive 10GB file, MiniGit only creates a new 4KB chunk, heavily deduplicating the remaining 9.9GB.
 - File `Blob`s act as manifest files that point to the hashes of these chunks, which are then seamlessly stitched back together upon reading.
 
+### 5. Branching, Merging & Time Travel
+MiniGit fully supports non-linear development via branching, merging, and time-traveling.
+- **Breadth-First Search (BFS)**: When merging two branches, MiniGit traverses the DAG backwards concurrently from both branch pointers to find the **Lowest Common Ancestor (LCA)**.
+- **3-Way Merge**: It extracts the `Tree` objects of the LCA, HEAD, and Target branch, and evaluates every file using the Myers Diff Engine.
+- **Conflict Detection**: Automatically detects if two branches modified the exact same file in conflicting ways, inserting standard `<<<<<<<`, `=======`, `>>>>>>>` markers.
+- **Time Travel (`restore`)**: Pass any historical commit hash to the `restore` command to instantly traverse the DAG and perfectly reconstruct a specific directory from the past into your present workspace.
 
-
-### 5. Staging Area & CLI Commands
+### 6. Staging Area & Modern CLI Commands
 Built with a modular Command Pattern, MiniGit supports the standard workflows you expect from a VCS: staging files to an `Index`, wrapping them into `Tree` snapshots, tracking history with `Commit` objects, and standard observation commands (`log`, `status`, `cat-file`).
+- **Hybrid Router**: The `checkout` command dynamically evaluates targets, acting as a router that either cleanly switches branches (via safety guards that prevent overwriting local work) or recursively restores files/directories.
+- **Dedicated Branching**: Features dedicated `branch` creation and a modern, strict `switch` command.
 
-### 6. DAG Visualizer
+### 7. DAG Visualizer
 Included is a `scripts/visualize.py` script that reads the binary `.minigit/objects/` database, decompresses it, parses the relationships, and generates an interactive, graphical HTML flowchart (using Mermaid.js) of your entire repository architecture in real-time.
 
 ---

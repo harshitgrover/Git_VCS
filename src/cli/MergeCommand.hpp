@@ -1,11 +1,9 @@
 #pragma once
-#include "Command.h"
-
-using namespace std;
+#include "Command.hpp"
 
 namespace minigit {
 
-class InitCommand : public Command {
+class MergeCommand : public Command {
 public:
     void execute(const vector<string>& args) override;
 };
