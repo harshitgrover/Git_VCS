@@ -403,4 +403,13 @@ A: The standard Dynamic Programming LCS (Longest Common Subsequence) algorithm m
 **Q: How does a Commit scale to massive repositories?**
 A: **Indirection.** A Commit doesn't store the 100,000 files in a repository. It holds exactly one pointer (a 64-byte string) to a Root `Tree` object. That Tree acts as a directory listing, pointing to `Blob` objects. The Blobs act as manifests, pointing to `Chunk` hashes. Because of this pointer chain, a Commit object is always exactly the same tiny byte size, regardless of whether the repository is 1 MB or 100 GB.
 
+**Q: Why do you need the Lowest Common Ancestor (LCA) to merge? Why not just compare the two branches directly? (3-Way vs 2-Way Merge)**
+A: If you only compare `main` and `feature` (a 2-Way merge), and a line of code is different, the algorithm has no idea who changed it. Did `main` add a line, or did `feature` delete a line? By using BFS to find the original LCA (the 3rd point of reference), the algorithm can look at the original state of the code. If `main` matches the original, but `feature` is different, we mathematically prove that `feature` is the one who made the edit, allowing us to safely automate the merge.
+
+**Q: Why model history as a Directed Acyclic Graph (DAG) instead of a Linked List?**
+A: A Linked List node can only point to exactly one parent. This works fine for a linear history, but completely breaks down the moment a developer creates a branch (divergence). Furthermore, a Merge Commit requires pointing to *two* parents to mathematically fuse the diverging timelines back together. A DAG is the only data structure that allows nodes to have multiple parents and multiple children while strictly preventing cycles (infinite time loops).
+
+**Q: Is there a risk of Hash Collisions with BLAKE3?**
+A: BLAKE3 generates a 256-bit hash. This means there are $2^{256}$ possible unique hashes (roughly equal to the number of atoms in the observable universe). The probability of two different code files generating the exact same 64-character string is so statistically infinitesimal that we architect the entire database around the absolute assumption that every hash is universally unique.
+
 ---
