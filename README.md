@@ -57,6 +57,21 @@ Built with a modular Command Pattern, MiniGit supports the standard workflows yo
 - **Hybrid Router**: The `checkout` command dynamically evaluates targets, acting as a router that either cleanly switches branches (via safety guards that prevent overwriting local work) or recursively restores files/directories.
 - **Dedicated Branching**: Features dedicated `branch` creation and a modern, strict `switch` command.
 
+**Supported Commands Quick-Reference:**
+*   `minigit init` - Initialize a repository
+*   `minigit add <file>` - Stage a file via CDC Chunking
+*   `minigit commit -m "<msg>"` - Take a permanent snapshot
+*   `minigit status` - View staging area
+*   `minigit log` - View commit history (DAG traversal)
+*   `minigit diff <file>` - Run Myers Diff Algorithm
+*   `minigit branch <name>` - Create a new branch pointer
+*   `minigit switch <name>` - Safely switch active branch
+*   `minigit checkout <target>` - Hybrid branch switch or file restore
+*   `minigit merge <name>` - 3-Way merge via LCA BFS search
+*   `minigit restore [<hash>] <path>` - Restore files (time-travel)
+*   `minigit gc` - Garbage Collection via Mark-and-Sweep
+*   `minigit cat-file [-p] <hash>` - Inspect/Decompress internal objects
+
 ### 7. DAG Visualizer
 Included is a `scripts/visualize.py` script that reads the binary `.minigit/objects/` database, decompresses it, parses the relationships, and generates an interactive, graphical HTML flowchart (using Mermaid.js) of your entire repository architecture in real-time.
 
