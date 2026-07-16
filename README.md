@@ -59,7 +59,7 @@ Built with a modular Command Pattern, MiniGit supports the standard workflows yo
 
 **Supported Commands Quick-Reference:**
 *   `minigit init [dir]` - Initialize a repository (creates directory if specified)
-*   `minigit add <path>` - Stage a file or directory via CDC Chunking (supports `add .`)
+*   `minigit add <path>` - Stage a file or directory via CDC Chunking (supports `add .`, `add -A`, `add --all`)
 *   `minigit commit -m "<msg>"` - Take a permanent snapshot with a required message
 *   `minigit status` - View staging area
 *   `minigit log` - View commit history (DAG traversal)

@@ -14,7 +14,11 @@ void AddCommand::execute(const vector<string>& args) {
     
     Repository repo(".");
     for (const auto& file : args) {
-        repo.add(file);
+        if (file == "-A" || file == "--all") {
+            repo.add(repo.getWorktree());
+        } else {
+            repo.add(file);
+        }
     }
 }
 

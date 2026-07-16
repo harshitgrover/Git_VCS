@@ -51,8 +51,8 @@ cmake --build build
 - **Under the hood:** Creates the `.minigit` hidden folder structure recursively, including `.minigit/objects/` (for the database), `.minigit/refs/heads/` (for branches), and the default `.minigit/HEAD` file pointing to `refs/heads/main`.
 
 ### 2. `add`
-**Usage:** `minigit add <filepath_or_directory>`
-- **Function:** Stages a file or an entire directory, preparing it to be included in the next commit. If you pass `.`, it recursively adds everything in the current directory.
+**Usage:** `minigit add <filepath_or_directory>` (or `-A` / `--all`)
+- **Function:** Stages a file or an entire directory, preparing it to be included in the next commit. If you pass `.`, it recursively adds everything in the current directory. If you pass `-A` or `--all`, it recursively adds all changes from the root of the entire repository.
 - **Under the hood:** Recursively scans directories. For each file, it hashes its contents using BLAKE3, creates chunks via the Rolling Hash CDC algorithm, compresses the chunks with zlib, stores them in the object database, and updates the `.minigit/index` file to map the file path to the new blob manifest hash.
 
 ### 3. `commit`
