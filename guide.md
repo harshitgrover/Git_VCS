@@ -136,6 +136,12 @@ This overloading confused beginners, who often accidentally wiped out their unsa
 *   **`restore`**: A dedicated command that *only* pulls files from the past to overwrite your local working directory. It can recursively restore an entire directory (`minigit restore src/`), restore everything (`minigit restore .`), or even time-travel by parsing a historical commit hash (`minigit restore <hash> .`).
 *   **Hybrid `checkout`**: MiniGit retains the classic `checkout` command as a smart hybrid router. It dynamically evaluates the target argument. If the target is a branch, it safely routes the request to the `switch` engine. If the target is a file or directory, it routes to the `restore` engine.
 
+#### 4.2 Branch and Repository Deletion
+Because branches are just text files in `.minigit/refs/heads/`, deleting a branch (`minigit delete <branch>`) is a simple $\mathcal{O}(1)$ operation that just removes that specific text file. 
+* **Safety First:** The system dynamically reads `.minigit/HEAD` before deletion to prevent you from deleting the branch you are currently standing on.
+* **Orphan Cleanup:** Deleting a branch does not delete the commits or files it pointed to. They simply become "orphaned" and will be purged later by the Garbage Collector (`minigit gc`).
+* **Repository Deletion:** Running `minigit delete` with no arguments triggers a repository self-destruct sequence, which interactively prompts for confirmation before recursively deleting the entire `.minigit` database directory.
+
 The real algorithmic complexity arises during **Merging** (`src/core/Repository.cpp`). When you run `minigit merge feature`, MiniGit must fuse two divergent histories. 
 
 #### Phase 1: Lowest Common Ancestor (BFS Traversal)

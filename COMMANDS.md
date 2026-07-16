@@ -2,9 +2,15 @@
 
 This document outlines every command implemented in the MiniGit Version Control System and explains its underlying function.
 
-To use these commands, build the project and execute the `minigit` binary:
+To use these commands, first build the project and set up your alias:
 ```bash
-./build/minigit <command> [args...]
+# Add this to your ~/.zshrc or equivalent shell config
+alias minigit='$PWD/build/minigit'
+```
+
+Now you can run the commands from anywhere:
+```bash
+minigit <command> [args...]
 ```
 
 ## Setup & Build Commands
@@ -40,18 +46,18 @@ cmake --build build
 ## Core Version Control Commands
 
 ### 1. `init`
-**Usage:** `minigit init`
-- **Function:** Initializes a new, empty MiniGit repository in the current working directory. 
-- **Under the hood:** Creates the `.minigit` hidden folder structure, including `.minigit/objects/` (for the database), `.minigit/refs/heads/` (for branches), and the default `.minigit/HEAD` file pointing to `refs/heads/main`.
+**Usage:** `minigit init [directory]`
+- **Function:** Initializes a new, empty MiniGit repository. If a `directory` name is provided, it creates that folder automatically. If omitted, it initializes in the current working directory.
+- **Under the hood:** Creates the `.minigit` hidden folder structure recursively, including `.minigit/objects/` (for the database), `.minigit/refs/heads/` (for branches), and the default `.minigit/HEAD` file pointing to `refs/heads/main`.
 
 ### 2. `add`
-**Usage:** `minigit add <filepath>`
-- **Function:** Stages a file, preparing it to be included in the next commit.
-- **Under the hood:** Reads the file, hashes its contents using BLAKE3, creates chunks via the Rolling Hash CDC algorithm, compresses the chunks with zlib, stores them in the object database, and updates the `.minigit/index` file to map the file path to the new blob manifest hash.
+**Usage:** `minigit add <filepath_or_directory>`
+- **Function:** Stages a file or an entire directory, preparing it to be included in the next commit. If you pass `.`, it recursively adds everything in the current directory.
+- **Under the hood:** Recursively scans directories. For each file, it hashes its contents using BLAKE3, creates chunks via the Rolling Hash CDC algorithm, compresses the chunks with zlib, stores them in the object database, and updates the `.minigit/index` file to map the file path to the new blob manifest hash.
 
 ### 3. `commit`
 **Usage:** `minigit commit -m "<message>"`
-- **Function:** Takes a permanent snapshot of the currently staged files in the index.
+- **Function:** Takes a permanent snapshot of the currently staged files in the index. The `-m` flag is required to attach a short, human-readable description (message) to the snapshot so you can identify it later in the log.
 - **Under the hood:** 
   1. Reads the `.minigit/index` and constructs a `Tree` object.
   2. Constructs a `Commit` object pointing to this `Tree`, and includes the current `HEAD` as its parent.
@@ -64,9 +70,9 @@ cmake --build build
 - **Under the hood:** Fetches the blob manifest from the index, reconstructs the file by pulling and decompressing all CDC chunks, reads your current working file, and runs the **Myers Diff Algorithm** to calculate the shortest sequence of additions (`+`) and deletions (`-`).
 
 ### 5. `branch`
-**Usage:** `minigit branch <branch_name>`
-- **Function:** Creates a new branch pointer at the current commit.
-- **Under the hood:** Creates a new text file at `.minigit/refs/heads/<branch_name>` and writes the current commit hash (from `HEAD`) into it.
+**Usage:** `minigit branch [branch_name]`
+- **Function:** If a `branch_name` is provided, it creates a new branch pointer at the current commit. If called with no arguments, it lists all available branches and highlights the currently active branch.
+- **Under the hood:** To create a branch, it creates a new text file at `.minigit/refs/heads/<branch_name>` and writes the current commit hash (from `HEAD`) into it. To list branches, it simply iterates over all the text files inside the `.minigit/refs/heads/` directory.
 
 ### 6. `switch`
 **Usage:** `minigit switch <branch_name>`
@@ -75,9 +81,9 @@ cmake --build build
 - **Under the hood:** Updates the `.minigit/HEAD` file to point to the new branch ref. Then, it parses the target branch's tree to reconstruct and overwrite the files in your working directory.
 
 ### 7. `restore`
-**Usage 1 (Instant Undo):** `minigit restore <filepath_or_directory>`
-**Usage 2 (Time Travel):** `minigit restore <commit_hash> <filepath_or_directory>`
-**Usage 3 (Restore All):** `minigit restore .`
+**Usage 1 (Instant Undo):** `minigit restore <filepath_or_directory>`<br>
+**Usage 2 (Time Travel):** `minigit restore <commit_hash> <filepath_or_directory>`<br>
+**Usage 3 (Restore All):** `minigit restore .`<br>
 - **Function:** Discards local changes or pulls old versions of files from history.
 - **Under the hood:** By default, it reads your most recent `HEAD` commit. If you pass a `commit_hash`, it parses that historical commit instead. It searches the Tree for an exact file match (e.g., `src/main.cpp`) or a directory prefix (e.g., `src/`). It then decompresses the requested chunks and flawlessly reconstructs the past files directly into your present-day working directory.
 
@@ -100,7 +106,7 @@ cmake --build build
 
 ## System Optimization & Maintenance
 
-### 5. `gc` (Garbage Collection)
+### 10. `gc` (Garbage Collection)
 **Usage:** `minigit gc`
 - **Function:** Cleans up the object database by deleting orphaned chunks and blobs to save disk space.
 - **Under the hood:** Performs a **Mark-and-Sweep** algorithm. It traverses the Directed Acyclic Graph (DAG) starting from all branch pointers and the index, marking every reachable Commit, Tree, and Chunk. It then sweeps the `.minigit/objects/` directory and deletes any file that wasn't marked as reachable.
@@ -109,22 +115,27 @@ cmake --build build
 
 ## Debug & Observability Tools
 
-### 6. `status`
+### 11. `status`
 **Usage:** `minigit status`
 - **Function:** Displays the current state of the staging area.
 - **Under the hood:** Reads `.minigit/index` and outputs the list of files currently marked as "Changes to be committed".
 
-### 7. `log`
+### 12. `log`
 **Usage:** `minigit log`
 - **Function:** Prints the chronological commit history of the current branch.
 - **Under the hood:** Reads the commit hash from `.minigit/HEAD`, decompresses the commit object, parses the embedded commit message, and iteratively follows the `parent <hash>` pointers backward in time to the root commit, printing each hash and message to the console.
 
-### 8. `cat-file`
+### 13. `cat-file`
 **Usage:** `minigit cat-file [-p] <hash>`
 - **Function:** Inspects the raw, internal data of any object in the database.
 - **Under the hood:** Decompresses the file located at `.minigit/objects/<hash[0:2]>/<hash[2:]>`. If the `-p` (pretty-print) flag is provided and the object is a chunk manifest, it will automatically fetch and assemble all the underlying chunks, printing the file exactly as it was originally added.
 
-### 9. `scripts/visualize.py`
+### 14. `delete`
+**Usage:** `minigit delete [branch_name]`
+- **Function:** Safely deletes a specific branch, or deletes the entire repository.
+- **Under the hood:** If a branch name is provided, it deletes the branch reference file at `.minigit/refs/heads/<branch>`. If no branch is provided, it prompts for confirmation before recursively deleting the `.minigit` folder, reverting the directory to an un-tracked state.
+
+### 15. `scripts/visualize.py`
 **Usage:** `python3 scripts/visualize.py`
 - **Function:** An included Python utility script that visually charts the internal database graph.
 - **Under the hood:** It scans the `.minigit/objects/` folder, decompresses all blobs, trees, commits, and chunks, resolves their dependencies, and outputs a `visualize.html` file using Mermaid.js. Opening this HTML file in your browser reveals a color-coded diagram of your DAG!
@@ -141,37 +152,52 @@ mkdir demo_repo
 cd demo_repo
 
 # 2. Initialize MiniGit
-../build/minigit init
+minigit init
 
 # 3. Create a file and add some content
 echo "Hello World!" > myfile.txt
 
 # 4. Check the status (Shows myfile.txt as untracked/modified)
-../build/minigit status
+minigit status
 
 # 5. Stage the file
-../build/minigit add myfile.txt
+minigit add myfile.txt
 
 # 6. Commit the file to the database
-../build/minigit commit -m "First commit: added myfile.txt"
+minigit commit -m "First commit: added myfile.txt"
 
 # 7. Modify the file
 echo "MiniGit is awesome!" >> myfile.txt
 
 # 8. View the diff (Shows what you just added)
-../build/minigit diff myfile.txt
+minigit diff myfile.txt
 
 # 9. Stage and commit the modification
-../build/minigit add myfile.txt
-../build/minigit commit -m "Second commit: updated myfile.txt"
+minigit add myfile.txt
+minigit commit -m "Second commit: updated myfile.txt"
 
 # 10. View the commit history
-../build/minigit log
+minigit log
 
-# 11. Run Garbage Collection to clean up old orphaned chunks
-../build/minigit gc
+# 11. Create and switch to a new branch
+minigit branch feature-branch
+minigit checkout feature-branch
 
-# 12. Generate a visual chart of the repository
+# 12. Modify a file on the new branch
+echo "Adding feature work..." > feature.txt
+minigit add feature.txt
+minigit commit -m "Third commit: added feature.txt"
+
+# 13. Switch back to the main branch
+minigit checkout main
+
+# 14. Merge the feature branch into main
+minigit merge feature-branch
+
+# 15. Run Garbage Collection to clean up old orphaned chunks
+minigit gc
+
+# 16. Generate a visual chart of the repository
 python3 ../scripts/visualize.py
 # (Then open the generated visualize.html in your web browser!)
 ```

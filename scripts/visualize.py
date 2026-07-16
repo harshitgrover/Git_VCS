@@ -160,8 +160,9 @@ def generate_html(gitdir):
 
     with open('visualize.html', 'w') as f:
         f.write(html)
+    abs_path = os.path.abspath('visualize.html')
     print("✨ Successfully generated visualize.html!")
-    print("👉 Open visualize.html in your web browser to see your repository's structure.")
+    print(f"👉 Copy/paste this link into your web browser: file://{abs_path}")
 
 if __name__ == '__main__':
     gitdir = '.minigit'

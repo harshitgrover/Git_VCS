@@ -17,6 +17,10 @@ void Index::add(const string& path, const string& hash) {
     entries_[path] = hash;
 }
 
+void Index::remove(const string& path) {
+    entries_.erase(path);
+}
+
 void Index::read() {
     entries_.clear();
     ifstream in(index_path_);
@@ -39,6 +43,10 @@ void Index::write() const {
     for (const auto& [path, hash] : entries_) {
         out << hash << " " << path << "\n";
     }
+}
+
+void Index::clear() {
+    entries_.clear();
 }
 
 } // namespace minigit

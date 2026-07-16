@@ -15,6 +15,7 @@
 #include "cli/MergeCommand.hpp"
 #include "cli/RestoreCommand.hpp"
 #include "cli/SwitchCommand.hpp"
+#include "cli/DeleteCommand.hpp"
 
 using namespace std;
 
@@ -59,6 +60,8 @@ int main(int argc, char** argv) {
             command = make_unique<minigit::RestoreCommand>();
         } else if (command_name == "switch") {
             command = make_unique<minigit::SwitchCommand>();
+        } else if (command_name == "delete") {
+            command = make_unique<minigit::DeleteCommand>();
         } else {
             cerr << "Unknown command: " << command_name << "\n";
             return 1;
@@ -67,7 +70,7 @@ int main(int argc, char** argv) {
         command->execute(args);
         
     } catch (const exception& e) {
-        cerr << "Fatal error: " << e.what() << "\n";
+        cerr << "Error: " << e.what() << "\n";
         return 1;
     }
     

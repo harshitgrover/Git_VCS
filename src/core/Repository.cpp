@@ -49,19 +49,53 @@ Repository Repository::init(const string& path) {
 void Repository::add(const string& file_path) {
     fs::path full_path = fs::absolute(file_path);
     if (!fs::exists(full_path)) {
-        throw runtime_error("File not found: " + file_path);
+        throw runtime_error("File or directory not found: " + file_path);
     }
-    
-    ifstream in(full_path, ios::binary);
-    string data((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
-    
-    Blob blob(data);
-    string hash = blob.write(*this);
     
     Index index(gitdir_);
     
-    string rel_path = fs::relative(full_path, worktree_).string();
-    index.add(rel_path, hash);
+    auto add_single_file = [&](const fs::path& p) {
+        string path_str = p.string();
+        if (path_str.find("/.minigit") != string::npos || path_str.find("/build") != string::npos || path_str.find("/.git") != string::npos) {
+            return;
+        }
+        
+        ifstream in(p, ios::binary);
+        string data((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
+        
+        Blob blob(data);
+        string hash = blob.write(*this);
+        
+        string rel_path = fs::relative(p, worktree_).string();
+        index.add(rel_path, hash);
+    };
+
+    if (fs::is_directory(full_path)) {
+        for (const auto& entry : fs::recursive_directory_iterator(full_path)) {
+            if (entry.is_regular_file()) {
+                add_single_file(entry.path());
+            }
+        }
+        
+        string prefix = fs::relative(full_path, worktree_).string();
+        if (prefix == ".") prefix = "";
+        
+        vector<string> files_to_remove;
+        for (const auto& [path, hash] : index.getEntries()) {
+            if (prefix.empty() || path.find(prefix + "/") == 0 || path == prefix) {
+                fs::path physical_path = fs::path(worktree_) / path;
+                if (!fs::exists(physical_path)) {
+                    files_to_remove.push_back(path);
+                }
+            }
+        }
+        for (const string& path : files_to_remove) {
+            index.remove(path);
+        }
+    } else {
+        add_single_file(full_path);
+    }
+    
     index.write();
 }
 
@@ -206,15 +240,49 @@ void Repository::switch_branch(const string& branch_name) {
     utils::ParsedCommit parsed = utils::parse_commit(gitdir_, commit_hash);
     map<string, string> tree = utils::parse_tree(gitdir_, parsed.tree_hash);
     
-    for (const auto& [path, hash] : tree) {
-        string raw_manifest = utils::read_object_content(gitdir_, hash);
-        string file_content = utils::reconstruct_from_manifest(gitdir_, raw_manifest);
-        
-        fs::path file_dest = fs::path(worktree_) / path;
-        fs::create_directories(file_dest.parent_path());
-        ofstream out(file_dest, ios::binary);
-        out << file_content;
+    for (const auto& [path, hash] : current_index_entries) {
+        if (tree.find(path) == tree.end()) {
+            fs::path file_to_delete = fs::path(worktree_) / path;
+            if (fs::exists(file_to_delete)) {
+                fs::remove(file_to_delete);
+                
+                fs::path parent = file_to_delete.parent_path();
+                while (parent != fs::path(worktree_) && parent.string().length() > string(worktree_).length()) {
+                    if (fs::exists(parent) && fs::is_empty(parent)) {
+                        fs::remove(parent);
+                        parent = parent.parent_path();
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
     }
+    
+    index.clear();
+    
+    for (const auto& [path, hash] : tree) {
+        bool needs_write = true;
+        if (current_index_entries.find(path) != current_index_entries.end() && current_index_entries.at(path) == hash) {
+            fs::path file_dest = fs::path(worktree_) / path;
+            if (fs::exists(file_dest)) {
+                needs_write = false;
+            }
+        }
+        
+        if (needs_write) {
+            string raw_manifest = utils::read_object_content(gitdir_, hash);
+            string file_content = utils::reconstruct_from_manifest(gitdir_, raw_manifest);
+            
+            fs::path file_dest = fs::path(worktree_) / path;
+            fs::create_directories(file_dest.parent_path());
+            ofstream out(file_dest, ios::binary);
+            out << file_content;
+        }
+        index.add(path, hash);
+    }
+    
+    index.write();
     
     ofstream head_out(fs::path(gitdir_) / "HEAD");
     head_out << "ref: refs/heads/" << branch_name << "\n";
@@ -362,10 +430,29 @@ void Repository::merge(const string& branch_name) {
         if (hA == hB) continue; 
         
         if (hO == hA && hO != hB) {
-            string content = utils::reconstruct_from_manifest(gitdir_, utils::read_object_content(gitdir_, hB));
-            ofstream out(fs::path(worktree_) / file, ios::binary);
-            out << content;
-            add(file); 
+            if (hB.empty()) {
+                fs::path file_to_delete = fs::path(worktree_) / file;
+                if (fs::exists(file_to_delete)) {
+                    fs::remove(file_to_delete);
+                    fs::path parent = file_to_delete.parent_path();
+                    while (parent != fs::path(worktree_) && parent.string().length() > string(worktree_).length()) {
+                        if (fs::exists(parent) && fs::is_empty(parent)) {
+                            fs::remove(parent);
+                            parent = parent.parent_path();
+                        } else { break; }
+                    }
+                }
+                Index idx(gitdir_);
+                idx.remove(file);
+                idx.write();
+            } else {
+                string content = utils::reconstruct_from_manifest(gitdir_, utils::read_object_content(gitdir_, hB));
+                fs::path file_dest = fs::path(worktree_) / file;
+                fs::create_directories(file_dest.parent_path());
+                ofstream out(file_dest, ios::binary);
+                out << content;
+                add(file); 
+            }
             continue;
         }
         if (hO != hA && hO == hB) {
@@ -405,6 +492,36 @@ void Repository::merge(const string& branch_name) {
         ref_out << commit_hash << "\n";
         
         cout << "Merge successful. Created merge commit [" << commit_hash << "].\n";
+    }
+}
+
+void Repository::delete_branch(const string& branch_name) {
+    fs::path target_branch_path = fs::path(gitdir_) / "refs" / "heads" / branch_name;
+    if (!fs::exists(target_branch_path)) {
+        throw runtime_error("Branch not found: " + branch_name);
+    }
+    
+    fs::path head_path = fs::path(gitdir_) / "HEAD";
+    if (fs::exists(head_path)) {
+        ifstream head_in(head_path);
+        string ref_line;
+        if (getline(head_in, ref_line)) {
+            if (ref_line == "ref: refs/heads/" + branch_name) {
+                throw runtime_error("can't delete current branch");
+            }
+        }
+    }
+    
+    fs::remove(target_branch_path);
+    cout << "Deleted branch '" << branch_name << "'\n";
+}
+
+void Repository::destroy() {
+    if (fs::exists(gitdir_)) {
+        fs::remove_all(gitdir_);
+        cout << "Deleted .minigit repository. Directory is no longer tracked.\n";
+    } else {
+        throw runtime_error("Not a minigit repository.");
     }
 }
 

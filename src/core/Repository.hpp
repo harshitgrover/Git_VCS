@@ -18,6 +18,8 @@ public:
     void switch_branch(const string& branch_name);
     void merge(const string& branch_name);
     void restore(const string& path, const string& source_hash = "");
+    void delete_branch(const string& branch_name);
+    void destroy();
 
     string getWorktree() const { return worktree_; }
     string getGitDir() const { return gitdir_; }

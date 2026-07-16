@@ -58,16 +58,17 @@ Built with a modular Command Pattern, MiniGit supports the standard workflows yo
 - **Dedicated Branching**: Features dedicated `branch` creation and a modern, strict `switch` command.
 
 **Supported Commands Quick-Reference:**
-*   `minigit init` - Initialize a repository
-*   `minigit add <file>` - Stage a file via CDC Chunking
-*   `minigit commit -m "<msg>"` - Take a permanent snapshot
+*   `minigit init [dir]` - Initialize a repository (creates directory if specified)
+*   `minigit add <path>` - Stage a file or directory via CDC Chunking (supports `add .`)
+*   `minigit commit -m "<msg>"` - Take a permanent snapshot with a required message
 *   `minigit status` - View staging area
 *   `minigit log` - View commit history (DAG traversal)
 *   `minigit diff <file>` - Run Myers Diff Algorithm
-*   `minigit branch <name>` - Create a new branch pointer
+*   `minigit branch [name]` - Create a branch, or list all branches if no name provided
 *   `minigit switch <name>` - Safely switch active branch
 *   `minigit checkout <target>` - Hybrid branch switch or file restore
 *   `minigit merge <name>` - 3-Way merge via LCA BFS search
+*   `minigit delete [name]` - Delete a specific branch, or wipe the repository
 *   `minigit restore [<hash>] <path>` - Restore files (time-travel)
 *   `minigit gc` - Garbage Collection via Mark-and-Sweep
 *   `minigit cat-file [-p] <hash>` - Inspect/Decompress internal objects

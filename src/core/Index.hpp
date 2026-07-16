@@ -13,8 +13,10 @@ public:
     Index(const string& gitdir);
     
     void add(const string& path, const string& hash);
+    void remove(const string& path);
     void read();
     void write() const;
+    void clear();
     
     const map<string, string>& getEntries() const { return entries_; }
 

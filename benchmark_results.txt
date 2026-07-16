@@ -5,18 +5,18 @@ Starting MiniGit Benchmark Suite...
 1. BLAKE3 Hashing Throughput Benchmark
 ========================================
 Data Size: 50 MB
-Time taken: 689335 microseconds (0.689335 seconds)
-Throughput: 72.53 MB/s
+Time taken: 660193 microseconds (0.660193 seconds)
+Throughput: 75.74 MB/s
 
 ========================================
 2. CDC Deduplication Benchmark
 ========================================
 Chunking V1 (10 MB):
-  Time taken: 122 ms
+  Time taken: 113 ms
   Total chunks created: 2504
 
 Chunking V2 (10 MB with 1 byte modified):
-  Time taken: 115 ms
+  Time taken: 116 ms
   Total chunks created: 2504
 
 Deduplication Results:
