@@ -1,6 +1,6 @@
-# 📘 The Complete Architecture & Code Guide: Git-VCS
+# 📘 The Complete Architecture & Code Guide: MiniGit
 
-This document is the exhaustive, file-by-file, function-by-function architectural breakdown of the Git-VCS project. It is designed as a complete master reference for backend engineering and system design. It covers every line of critical logic, the algorithms, the data structures, the mathematical models, and the architectural trade-offs.
+This document is the exhaustive, file-by-file, function-by-function architectural breakdown of the MiniGit project. It is designed as a complete master reference for backend engineering and system design. It covers every line of critical logic, the algorithms, the data structures, the mathematical models, and the architectural trade-offs.
 
 ---
 
